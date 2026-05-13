@@ -302,6 +302,20 @@ html, body {
   border-top: 1px solid var(--grey-200);
 }
 
+.pdf-link {
+  background: var(--blue-light);
+  color: var(--blue);
+  border: 1px solid #bfdbfe;
+}
+
+.pdf-link:hover {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  box-shadow: 0 2px 8px rgba(0,62,120,0.2);
+  text-decoration: none;
+}
+
 .review-alert {
   background: #fffbeb;
   border: 1px solid #fde68a;

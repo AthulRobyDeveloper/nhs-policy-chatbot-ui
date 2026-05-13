@@ -19,9 +19,12 @@ export interface PolicyResponse {
   source:             string
   reference:          string
   version:            string
-  page:               string
+  page:               number | string
   pathway:            string
+  confidence_score?:  number
   confidence_percent: number
   confidence_label:   string
+  pdf_url?:           string
   timestamp:          string
+  disclaimer?:        string
 }

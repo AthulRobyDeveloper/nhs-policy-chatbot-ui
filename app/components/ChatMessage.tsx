@@ -87,9 +87,30 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                     <p className="text-[13px] font-bold text-gray-800 leading-snug truncate">
                       {meta.source}
                     </p>
-                    <p className="text-[11px] font-mono text-gray-400 mt-0.5">
-                      {meta.reference} · v{meta.version} · p.{meta.page}
-                    </p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <p className="text-[11px] font-mono text-gray-400">
+                        {meta.reference} · v{meta.version} · p.{meta.page}
+                      </p>
+                      {meta.pdf_url && (
+                        <a
+                          href={`${meta.pdf_url}#page=${meta.page}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="pdf-link inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all"
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                          </svg>
+                          View p.{meta.page}
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                          </svg>
+                        </a>
+                      )}
+                    </div>
                   </div>
                   <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 ${
                     meta.pathway === 'Pathway 2' ? 'pathway-2' : 'pathway-1'
