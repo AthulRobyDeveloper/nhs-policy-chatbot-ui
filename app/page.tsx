@@ -8,11 +8,11 @@ import { ChatMessage, PolicyDocument, PolicyResponse } from '@/app/types'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 const SUGGESTED_QUESTIONS = [
-  "What is UHP's policy on using ChatGPT?",
-  "Who must approve AI systems at UHP?",
-  "What is the process for reporting a patient safety incident?",
-  "What does DCB0129 require?",
-  "What are the data quality standards at UHP?",
+  { icon: '🤖', text: "What is UHP's policy on using ChatGPT?" },
+  { icon: '✅', text: 'Who must approve AI systems at UHP?' },
+  { icon: '🚨', text: 'What is the process for reporting a patient safety incident?' },
+  { icon: '📋', text: 'What does DCB0129 require?' },
+  { icon: '📊', text: 'What are the data quality standards at UHP?' },
 ]
 
 export default function Home() {
@@ -41,15 +41,12 @@ export default function Home() {
   const sendMessage = async (question: string) => {
     if (!question.trim() || isLoading) return
     setError(null)
-
-    const userMessage: ChatMessage = {
+    setMessages(prev => [...prev, {
       id: crypto.randomUUID(), role: 'user',
       content: question.trim(), timestamp: new Date().toISOString()
-    }
-    setMessages(prev => [...prev, userMessage])
+    }])
     setInput('')
     setIsLoading(true)
-
     try {
       const res = await fetch(`${API_URL}/ask`, {
         method: 'POST',
@@ -62,7 +59,7 @@ export default function Home() {
         id: crypto.randomUUID(), role: 'assistant',
         content: data.answer, timestamp: data.timestamp, metadata: data
       }])
-      setAuditCount(prev => prev + 1)
+      setAuditCount(c => c + 1)
     } catch (err: any) {
       setError(err.message || 'Failed to get response')
     } finally {
@@ -75,104 +72,127 @@ export default function Home() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input) }
   }
 
+  const newChat = () => {
+    setMessages([]); setInput(''); setError(null); setAuditCount(0)
+    inputRef.current?.focus()
+  }
+
   return (
-    <div className="app-shell flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'var(--surface)' }}>
 
-      {/* ── Header ── */}
-      <header className="app-header flex-shrink-0">
-        <div className="max-w-screen-2xl mx-auto px-6 py-3.5 flex items-center justify-between relative z-10">
+      {/* ══ HEADER ══ */}
+      <header className="app-header">
+        <div className="px-10 flex items-center justify-between relative z-10" style={{ minHeight: 90 }}>
 
-          {/* Brand */}
-          <div className="flex items-center gap-4">
-            <div className="nhs-logo-badge">NHS</div>
-            <div>
-              <h1 className="text-white font-bold text-[15px] leading-tight tracking-tight">
-                UHP Policy Assistant
-              </h1>
-              <p className="text-blue-200 text-[11px] tracking-wide font-medium">
-                University Hospitals Plymouth NHS Trust
+          {/* Logo + title */}
+          <div className="flex items-center gap-6">
+            <img src="/nhs-uhp-logo.png" alt="University Hospitals Plymouth NHS Trust"
+                 className="uhp-logo-img" />
+            <div className="header-divider hidden md:block" />
+            <div className="hidden md:block relative z-10">
+              <p className="text-white font-bold text-[17px] leading-none tracking-tight">
+                Policy Assistant
+              </p>
+              <p className="text-blue-200 text-[12px] font-medium mt-1.5 tracking-wide">
+                AI-powered · Pathway 1 compliant
               </p>
             </div>
           </div>
 
           {/* Right */}
-          <div className="hidden sm:flex items-center gap-4">
-            {/* Live indicator */}
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
-              </span>
-              <span className="text-blue-100 text-xs font-semibold tracking-wider">LIVE</span>
-            </div>
-
-            {/* Compliance */}
-            <div className="compliance-chip flex items-center gap-2">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+          <div className="flex items-center gap-3">
+            <div className="compliance-chip hidden sm:flex items-center gap-2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="2.5" className="text-blue-200">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
-              <span className="text-blue-100 text-xs font-medium">
-                Pathway 1 · TRW.D&I.POL.1502.1.1
+              <span className="text-blue-100 text-[12px] font-semibold tracking-wide">
+                TRW.D&I.POL.1502.1.1
               </span>
             </div>
+            {messages.length > 0 && (
+              <button onClick={newChat} className="new-chat-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" strokeWidth="2.5">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                New Chat
+              </button>
+            )}
           </div>
         </div>
-        <div className="header-glow" />
       </header>
 
-      {/* ── Main layout ── */}
+      {/* ══ BODY ══ */}
       <div className="flex flex-1 overflow-hidden">
         <PolicySidebar documents={documents} auditCount={auditCount} isLoading={docsLoading} />
 
         <main className="chat-main flex-1 flex flex-col overflow-hidden">
 
-          {/* ── Messages ── */}
+          {/* ── Scroll area ── */}
           <div className="flex-1 overflow-y-auto px-6 py-8">
 
-            {/* Welcome */}
+            {/* ── WELCOME SCREEN ── */}
             {messages.length === 0 && (
-              <div className="max-w-2xl mx-auto fade-in-up">
+              <div className="welcome-wrap fade-in-up">
 
-                {/* Hero */}
-                <div className="hero-card p-8 text-center mb-5">
-                  <div className="hero-icon w-16 h-16 mx-auto mb-5 flex items-center justify-center text-3xl">
-                    🏥
+                {/* Hero card */}
+                <div className="hero-card mb-8">
+                  {/* Top row — icon left, text right */}
+                  <div className="hero-top">
+                    <div className="hero-icon-wrap">🏥</div>
+                    <div className="hero-text">
+                      <h2 className="hero-title">UHP Policy Assistant</h2>
+                      <p className="hero-sub">
+                        Instant, cited answers from official UHP policy documents.
+                        Ask anything — every answer is grounded in the source with full citations.
+                      </p>
+                      <div className="warning-chip">
+                        <span>⚠</span>
+                        Do not include patient or staff personal data in your questions
+                      </div>
+                    </div>
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">
-                    UHP Policy Assistant
-                  </h2>
-                  <p className="text-sm text-gray-500 leading-relaxed max-w-sm mx-auto mb-5">
-                    Ask questions about UHP policies and procedures. Every answer
-                    is grounded in official documents with full source citations.
-                  </p>
-                  <div className="warning-chip inline-flex items-center gap-2 px-4 py-2 text-xs font-medium">
-                    <span>⚠</span>
-                    Do not include patient or staff personal data in your questions
+
+                  {/* Stats row */}
+                  <div className="hero-stats">
+                    <div className="hero-stat">
+                      <div className="hero-stat-num">{docsLoading ? '—' : documents.length}</div>
+                      <div className="hero-stat-label">Policy Documents</div>
+                    </div>
+                    <div className="hero-stat">
+                      <div className="hero-stat-num">RAG</div>
+                      <div className="hero-stat-label">AI Architecture</div>
+                    </div>
+                    <div className="hero-stat">
+                      <div className="hero-stat-num">P1</div>
+                      <div className="hero-stat-label">Pathway Compliant</div>
+                    </div>
+                    <div className="hero-stat">
+                      <div className="hero-stat-num">100%</div>
+                      <div className="hero-stat-label">Local Processing</div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Suggested */}
-                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">
-                  Try asking
-                </p>
-                <div className="space-y-2">
+                {/* Suggested questions */}
+                <p className="suggest-section-label">Try asking</p>
+                <div className="suggest-grid">
                   {SUGGESTED_QUESTIONS.map((q, i) => (
-                    <button
-                      key={i}
-                      onClick={() => sendMessage(q)}
-                      className="suggest-btn w-full text-left px-4 py-3.5 flex items-center gap-3 group"
-                    >
-                      <span className="suggest-arrow">→</span>
-                      <span className="text-sm font-medium">{q}</span>
+                    <button key={i} onClick={() => sendMessage(q.text)} className="suggest-btn">
+                      <div className="suggest-icon">{q.icon}</div>
+                      <div className="suggest-text">
+                        <span className="suggest-question">{q.text}</span>
+                        <span className="suggest-hint">Click to ask →</span>
+                      </div>
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Messages */}
-            <div className="max-w-2xl mx-auto w-full space-y-5">
+            {/* ── MESSAGE THREAD ── */}
+            <div className="w-full mx-auto flex flex-col gap-6" style={{ maxWidth: 900 }}>
               {messages.map(msg => (
                 <ChatMessageComponent key={msg.id} message={msg} />
               ))}
@@ -181,17 +201,17 @@ export default function Home() {
               {isLoading && (
                 <div className="flex justify-start fade-in-up">
                   <div className="flex items-start gap-3">
-                    <div className="assistant-avatar"><span className="text-[9px] font-black tracking-wider">NHS</span></div>
-                    <div className="answer-card px-5 py-4 flex items-center gap-3">
+                    <div className="assistant-avatar"><span>NHS</span></div>
+                    <div className="answer-card px-6 py-4 flex items-center gap-4">
                       <div className="flex gap-1.5">
                         {[0,1,2].map(i => (
-                          <div key={i}
-                            className="w-2 h-2 rounded-full animate-bounce"
-                            style={{ background: 'var(--blue)', animationDelay: `${i*0.15}s` }}
-                          />
+                          <div key={i} className="w-2.5 h-2.5 rounded-full animate-bounce"
+                               style={{ background: 'var(--blue)', animationDelay: `${i*0.18}s` }} />
                         ))}
                       </div>
-                      <span className="text-xs text-gray-400 font-medium">Searching policy documents…</span>
+                      <span className="text-[13px] font-medium" style={{ color: 'var(--ink-4)' }}>
+                        Searching policy documents…
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -199,9 +219,9 @@ export default function Home() {
 
               {/* Error */}
               {error && (
-                <div className="error-card flex items-start gap-3 px-5 py-4 fade-in-up">
-                  <span className="text-red-500 text-base mt-0.5">⚠</span>
-                  <p className="text-sm text-red-600 font-medium">{error}</p>
+                <div className="error-card fade-in-up">
+                  <span className="text-red-500 text-lg flex-shrink-0">⚠</span>
+                  <p className="text-[13px] font-medium text-red-600">{error}</p>
                 </div>
               )}
 
@@ -209,10 +229,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ── Input ── */}
-          <div className="input-area flex-shrink-0 px-6 py-4">
-            <div className="max-w-2xl mx-auto">
-              <div className="input-box flex gap-3 items-end p-3">
+          {/* ── INPUT BAR ── */}
+          <div className="input-area">
+            <div style={{ maxWidth: 900, margin: '0 auto', width: '100%' }}>
+              <div className="input-box">
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -220,18 +240,18 @@ export default function Home() {
                   onKeyDown={handleKeyDown}
                   placeholder="Ask a policy question… (e.g. What is UHP's policy on AI?)"
                   rows={1}
-                  className="flex-1 bg-transparent resize-none text-sm text-gray-800 placeholder-gray-400 focus:outline-none px-2 py-1 max-h-32 overflow-y-auto"
-                  style={{ minHeight: '36px', lineHeight: '1.6' }}
+                  className="flex-1 bg-transparent resize-none text-[14px] placeholder-gray-400 focus:outline-none py-1.5 max-h-32 overflow-y-auto"
+                  style={{ minHeight: 36, lineHeight: 1.65, color: 'var(--ink-1)' }}
                 />
                 <button
                   onClick={() => sendMessage(input)}
                   disabled={!input.trim() || isLoading}
-                  className="send-btn flex-shrink-0 w-9 h-9 flex items-center justify-center text-white font-bold text-base disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none"
+                  className="send-btn disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   ↑
                 </button>
               </div>
-              <p className="text-[11px] text-gray-400 mt-2 text-center font-medium">
+              <p className="text-[11px] text-center font-medium mt-2.5" style={{ color: 'var(--ink-4)' }}>
                 All queries are anonymously logged for audit compliance · Do not include patient data
               </p>
             </div>
