@@ -23,6 +23,7 @@ export default function Home() {
   const [docsLoading, setDocsLoading] = useState(true)
   const [auditCount,  setAuditCount]  = useState(0)
   const [error,       setError]       = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLTextAreaElement>(null)
@@ -82,14 +83,14 @@ export default function Home() {
 
       {/* ══ HEADER ══ */}
       <header className="app-header">
-        <div className="px-10 flex items-center justify-between relative z-10" style={{ minHeight: 90 }}>
+        <div className="header-inner">
 
           {/* Logo + title */}
           <div className="flex items-center gap-6">
             <img src="/nhs-uhp-logo.png" alt="University Hospitals Plymouth NHS Trust"
                  className="uhp-logo-img" />
-            <div className="header-divider hidden md:block" />
-            <div className="hidden md:block relative z-10">
+            <div className="header-divider header-divider--desktop" />
+            <div className="header-title-block">
               <p className="text-white font-bold text-[17px] leading-none tracking-tight">
                 Policy Assistant
               </p>
@@ -99,9 +100,24 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right */}
-          <div className="flex items-center gap-3">
-            <div className="compliance-chip hidden sm:flex items-center gap-2">
+          {/* Right actions */}
+          <div className="header-actions">
+            {/* Mobile only: open policy drawer */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="mobile-policy-btn"
+              aria-label="View policy library"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" strokeWidth="2.5">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              Policies
+            </button>
+
+            {/* Desktop only: compliance chip */}
+            <div className="compliance-chip compliance-chip--desktop">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="2.5" className="text-blue-200">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -110,13 +126,15 @@ export default function Home() {
                 TRW.D&I.POL.1502.1.1
               </span>
             </div>
+
+            {/* New Chat — shown when conversation active */}
             {messages.length > 0 && (
               <button onClick={newChat} className="new-chat-btn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" strokeWidth="2.5">
                   <path d="M12 5v14M5 12h14"/>
                 </svg>
-                New Chat
+                <span>New Chat</span>
               </button>
             )}
           </div>
@@ -125,12 +143,28 @@ export default function Home() {
 
       {/* ══ BODY ══ */}
       <div className="flex flex-1 overflow-hidden">
-        <PolicySidebar documents={documents} auditCount={auditCount} isLoading={docsLoading} />
+
+        {/* Mobile backdrop */}
+        {sidebarOpen && (
+          <div
+            className="sidebar-backdrop"
+            style={{ display: 'block' }}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        <PolicySidebar
+          documents={documents}
+          auditCount={auditCount}
+          isLoading={docsLoading}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
 
         <main className="chat-main flex-1 flex flex-col overflow-hidden">
 
           {/* ── Scroll area ── */}
-          <div className="flex-1 overflow-y-auto px-6 py-8">
+          <div className="chat-scroll flex-1 overflow-y-auto px-6 py-8">
 
             {/* ── WELCOME SCREEN ── */}
             {messages.length === 0 && (
@@ -183,7 +217,7 @@ export default function Home() {
                       <div className="suggest-icon">{q.icon}</div>
                       <div className="suggest-text">
                         <span className="suggest-question">{q.text}</span>
-                        <span className="suggest-hint">Click to ask →</span>
+                        <span className="suggest-hint">Tap to ask →</span>
                       </div>
                     </button>
                   ))}
@@ -238,7 +272,7 @@ export default function Home() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask a policy question… (e.g. What is UHP's policy on AI?)"
+                  placeholder="Ask a policy question…"
                   rows={1}
                   className="flex-1 bg-transparent resize-none text-[14px] placeholder-gray-400 focus:outline-none py-1.5 max-h-32 overflow-y-auto"
                   style={{ minHeight: 36, lineHeight: 1.65, color: 'var(--ink-1)' }}

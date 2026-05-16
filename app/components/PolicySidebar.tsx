@@ -6,18 +6,23 @@ interface PolicySidebarProps {
   documents:  PolicyDocument[]
   auditCount: number
   isLoading:  boolean
+  isOpen:     boolean
+  onClose:    () => void
 }
 
 function isOverdue(d: string) {
   return ['April 2026','March 2026','February 2026','January 2026'].includes(d)
 }
 
-export default function PolicySidebar({ documents, auditCount, isLoading }: PolicySidebarProps) {
+export default function PolicySidebar({ documents, auditCount, isLoading, isOpen, onClose }: PolicySidebarProps) {
   return (
-    <aside className="sidebar flex-shrink-0 h-full overflow-hidden">
+    <aside className={`sidebar flex-shrink-0 h-full overflow-hidden${isOpen ? ' open' : ''}`}>
 
       {/* ── Header ── */}
-      <div className="sidebar-header">
+      <div className="sidebar-header" style={{ position: 'relative' }}>
+        {/* Mobile drag handle */}
+        <div className="sidebar-drag-handle" />
+
         <p className="text-[10px] font-bold text-blue-200 uppercase tracking-[0.18em] mb-2 relative z-10">
           Policy Library
         </p>
@@ -28,9 +33,23 @@ export default function PolicySidebar({ documents, auditCount, isLoading }: Poli
             </p>
             <p className="text-blue-200 text-[11px] mt-0.5 font-medium">documents indexed</p>
           </div>
-          <div className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-3 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-white/80 text-[10px] font-semibold tracking-wide">LIVE</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-3 py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-white/80 text-[10px] font-semibold tracking-wide">LIVE</span>
+            </div>
+            {/* Close button — mobile only */}
+            <button
+              onClick={onClose}
+              className="sidebar-close-btn"
+              aria-label="Close policy library"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
