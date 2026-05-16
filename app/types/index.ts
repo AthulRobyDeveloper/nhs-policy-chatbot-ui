@@ -12,6 +12,7 @@ export interface PolicyDocument {
   version:     string
   pathway:     string
   review_date: string
+  pdf_url?:    string
 }
 
 export interface PolicyResponse {
@@ -20,6 +21,7 @@ export interface PolicyResponse {
   reference:          string
   version:            string
   page:               number | string
+  all_pages:          number[]
   pathway:            string
   confidence_score?:  number
   confidence_percent: number

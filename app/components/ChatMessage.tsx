@@ -95,35 +95,56 @@ export default function ChatMessage({ message }: Props) {
                 {/* Source row */}
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-bold text-gray-800 leading-snug mb-1">
-                      {meta.source}
-                    </p>
-                    <div className="flex items-center flex-wrap gap-2">
+                    {meta.pdf_url ? (
+                      <a
+                        href={`${meta.pdf_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="source-title-link"
+                      >
+                        {meta.source}
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" strokeWidth="2.5" style={{ flexShrink: 0 }}>
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                      </a>
+                    ) : (
+                      <p className="text-[13px] font-bold text-gray-800 leading-snug mb-1">
+                        {meta.source}
+                      </p>
+                    )}
+                    <div className="flex items-center flex-wrap gap-2 mt-1">
                       <span className="mono text-[11px] text-gray-400">
-                        {meta.reference} · v{meta.version} · p.{meta.page}
+                        {meta.reference} · v{meta.version}
+                        {meta.all_pages?.length > 1
+                          ? ` · pp.${meta.all_pages.join(', ')}`
+                          : ` · p.${meta.page}`
+                        }
                       </span>
-                      {meta.pdf_url && (
-                        <a
-                          href={`${meta.pdf_url}#page=${meta.page}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="pdf-link"
-                        >
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                               stroke="currentColor" strokeWidth="2.5">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                          </svg>
-                          View p.{meta.page}
-                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
-                               stroke="currentColor" strokeWidth="2.5">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                            <polyline points="15 3 21 3 21 9"/>
-                            <line x1="10" y1="14" x2="21" y2="3"/>
-                          </svg>
-                        </a>
-                      )}
                     </div>
+
+                    {/* Page links */}
+                    {meta.pdf_url && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {(meta.all_pages?.length > 1 ? meta.all_pages.slice(0, 5) : [meta.page]).map((p: number | string) => (
+                          <a
+                            key={p}
+                            href={`/view?url=${encodeURIComponent(meta.pdf_url!)}&page=${p}&title=${encodeURIComponent(meta.source)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="pdf-link"
+                          >
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" strokeWidth="2.5">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                              <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                            p.{p}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <span className={`font-semibold flex-shrink-0 ${
                     meta.pathway === 'Pathway 2' ? 'pathway-2' : 'pathway-1'

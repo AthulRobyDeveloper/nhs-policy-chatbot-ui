@@ -79,7 +79,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'var(--surface)' }}>
+    <div className="flex flex-col overflow-hidden" style={{ background: 'var(--surface)', height: '100dvh' }}>
 
       {/* ══ HEADER ══ */}
       <header className="app-header">

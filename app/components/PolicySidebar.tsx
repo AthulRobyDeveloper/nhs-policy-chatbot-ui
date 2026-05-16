@@ -14,13 +14,68 @@ function isOverdue(d: string) {
   return ['April 2026','March 2026','February 2026','January 2026'].includes(d)
 }
 
+const PDF_MAP: Record<string, string> = {
+  'TRW.CRM.POL.103.5':    '/policies/data_quality.pdf',
+  'TRW.D&I.POL.1502.1.1': '/policies/ai_policy.pdf',
+  'TRW.HGV.POL.1467.2':   '/policies/patient_safety.pdf',
+  'TRW.IGT.POL.139.7':    '/policies/info_security.pdf',
+  'TRW.IGT.POL.373.6.1':  '/policies/info_governance.pdf',
+}
+
+function DocCard({ doc }: { doc: PolicyDocument }) {
+  const pdfUrl = doc.pdf_url || PDF_MAP[doc.reference] || null
+  const badges = (
+    <div className="flex flex-wrap gap-1.5">
+      <span className="version-badge">v{doc.version}</span>
+      <span className={doc.pathway === 'Pathway 2' ? 'pathway-2' : 'pathway-1'}>
+        {doc.pathway}
+      </span>
+      {isOverdue(doc.review_date)
+        ? <span className="overdue-badge">⚠ Review due</span>
+        : <span className="current-badge">{doc.review_date}</span>
+      }
+    </div>
+  )
+
+  const inner = (
+    <>
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <p className="doc-card-title">{doc.title}</p>
+        {pdfUrl && (
+          <svg className="doc-card-icon" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+        )}
+      </div>
+      <p className="mono text-[10px] text-gray-400 mb-3 tracking-tight">{doc.reference}</p>
+      {badges}
+    </>
+  )
+
+  if (pdfUrl) {
+    return (
+      <a
+        href={`/view?url=${encodeURIComponent(pdfUrl)}&page=1&title=${encodeURIComponent(doc.title)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="doc-card doc-card--link"
+      >
+        {inner}
+      </a>
+    )
+  }
+
+  return <div className="doc-card">{inner}</div>
+}
+
 export default function PolicySidebar({ documents, auditCount, isLoading, isOpen, onClose }: PolicySidebarProps) {
   return (
     <aside className={`sidebar flex-shrink-0 h-full overflow-hidden${isOpen ? ' open' : ''}`}>
 
       {/* ── Header ── */}
       <div className="sidebar-header" style={{ position: 'relative' }}>
-        {/* Mobile drag handle */}
         <div className="sidebar-drag-handle" />
 
         <p className="text-[10px] font-bold text-blue-200 uppercase tracking-[0.18em] mb-2 relative z-10">
@@ -38,14 +93,8 @@ export default function PolicySidebar({ documents, auditCount, isLoading, isOpen
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
               <span className="text-white/80 text-[10px] font-semibold tracking-wide">LIVE</span>
             </div>
-            {/* Close button — mobile only */}
-            <button
-              onClick={onClose}
-              className="sidebar-close-btn"
-              aria-label="Close policy library"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" strokeWidth="2.5">
+            <button onClick={onClose} className="sidebar-close-btn" aria-label="Close policy library">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="18" y1="6" x2="6" y2="18"/>
                 <line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
@@ -60,26 +109,7 @@ export default function PolicySidebar({ documents, auditCount, isLoading, isOpen
           ? Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="skeleton-pulse" style={{ height: 96 }} />
             ))
-          : documents.map((doc, i) => (
-              <div key={i} className="doc-card">
-                <p className="text-[13px] font-semibold text-gray-900 leading-snug mb-1.5">
-                  {doc.title}
-                </p>
-                <p className="mono text-[10px] text-gray-400 mb-3 tracking-tight">
-                  {doc.reference}
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="version-badge">v{doc.version}</span>
-                  <span className={doc.pathway === 'Pathway 2' ? 'pathway-2' : 'pathway-1'}>
-                    {doc.pathway}
-                  </span>
-                  {isOverdue(doc.review_date)
-                    ? <span className="overdue-badge">⚠ Review due</span>
-                    : <span className="current-badge">{doc.review_date}</span>
-                  }
-                </div>
-              </div>
-            ))
+          : documents.map((doc, i) => <DocCard key={i} doc={doc} />)
         }
       </div>
 
